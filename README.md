@@ -1,102 +1,68 @@
-# ATS Score Checker
+# ATS CV Scorer
 
-A Streamlit app where users paste their CV (and optionally a job description) and get an
-ATS-style score out of 100, a breakdown by category, missing keywords and concrete
-suggestions. The analysis is done by a Gemini Flash model through the `google-genai` SDK.
+Paste your CV and get an ATS (Applicant Tracking System) score out of 100, a breakdown by category, missing keywords, and specific fixes. Optionally paste a job description for a more accurate keyword score.
 
-> Scores are AI-generated estimates, not the output of a real ATS.
+Built with [Streamlit](https://streamlit.io) and a Google Gemini Flash model (via the `google-genai` SDK).
 
-## How scoring works
+## How the score works
 
-Gemini scores four categories from 0-100 and returns them as structured JSON. The overall
-score is calculated in the app (not by the model) using these weights:
+The AI rates five categories from 0 to 100. The app then computes the overall score as a fixed weighted average, so the headline number is consistent:
 
-| Category                  | Weight |
-|---------------------------|--------|
-| Keyword match             | 35%    |
-| Content quality & impact  | 30%    |
-| Structure & formatting    | 20%    |
-| Readability & length      | 15%    |
+| Category | Weight |
+|---|---|
+| Keywords & relevance | 30% |
+| Experience & impact | 25% |
+| ATS-friendly formatting | 20% |
+| Completeness | 15% |
+| Readability & language | 10% |
+
+This is an estimate, not the output of a real ATS. Treat it as guidance for improving your CV.
 
 ## Run locally
 
-1. Get a free API key from [Google AI Studio](https://aistudio.google.com/apikey).
-2. Install dependencies (Python 3.10+):
-
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate        # Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-3. Add your key. Create `.streamlit/secrets.toml`:
-
-   ```toml
-   GEMINI_API_KEY = "your-key-here"
-   # Optional: pin a specific model instead of the default "gemini-flash-latest"
-   # GEMINI_MODEL = "gemini-2.5-flash"
-   ```
-
-   Alternatively set an environment variable: `export GEMINI_API_KEY="your-key-here"`.
-
-4. Start the app:
-
-   ```bash
-   streamlit run app.py
-   ```
-
-## Project structure
-
-```
-.
-├── app.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-└── .streamlit/
-    └── secrets.toml     # local only, never commit this
-```
-
-## Push to GitHub
-
-Make sure `.gitignore` contains `.streamlit/secrets.toml` and `.venv/` so your key is never
-uploaded.
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Install and run:
 
 ```bash
-git init
-git add .
-git commit -m "Initial commit: ATS score checker"
-git branch -M main
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+export GEMINI_API_KEY="your-key"   # Windows PowerShell: $env:GEMINI_API_KEY="your-key"
+streamlit run app.py
 ```
 
-Create an empty repository on github.com (no README or .gitignore), then:
+Alternatively, create `.streamlit/secrets.toml` (never commit it):
 
-```bash
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin main
+```toml
+GEMINI_API_KEY = "your-key"
 ```
 
-If you ever commit your API key by accident, revoke it in Google AI Studio and create a new one.
+You can also paste the key into the app's sidebar.
+
+## Configuration
+
+| Setting | Where | Default |
+|---|---|---|
+| `GEMINI_API_KEY` | Streamlit secrets or environment variable | none (required) |
+| `GEMINI_MODEL` | Streamlit secrets or environment variable | `gemini-3.5-flash` |
+
+If the default model name is rejected, set `GEMINI_MODEL` to another Flash model listed in the [Gemini models docs](https://ai.google.dev/gemini-api/docs/models).
 
 ## Deploy on Streamlit Community Cloud
 
-1. Go to [share.streamlit.io](https://share.streamlit.io) and sign in with GitHub.
-2. Click **Create app** and choose your repository, the `main` branch and `app.py` as the
-   main file path.
-3. Open **Advanced settings > Secrets** and paste:
+1. Push this repo to GitHub (keep `app.py` and `requirements.txt` in the repo root).
+2. Go to [share.streamlit.io](https://share.streamlit.io), sign in with GitHub, and click **Create app**.
+3. Pick the repo, branch `main`, and main file `app.py`.
+4. Open **Advanced settings > Secrets** and add: `GEMINI_API_KEY = "your-key"`
+5. Click **Deploy**.
 
-   ```toml
-   GEMINI_API_KEY = "your-key-here"
-   ```
+## Privacy
 
-4. Click **Deploy**. After a minute or two you get a public `*.streamlit.app` URL.
+CV text is sent to the Gemini API for analysis. This app does not store it. Do not paste ID numbers or other highly sensitive data.
 
-Updating the app later is just `git push`; Streamlit redeploys automatically.
+## Files
 
-## Notes
-
-- CV text is sent to Google's Gemini API. Mention this in your privacy notice if you share
-  the app publicly, and do not log CV content.
-- On the free Gemini tier, requests are rate limited. Results are cached for an hour per
-  identical input to save quota.
-- Limits: CV 200 to 20,000 characters, job description up to 10,000 characters.
+- `app.py` - the Streamlit app
+- `requirements.txt` - Python dependencies
+- `README.md` - this file
